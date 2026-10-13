@@ -2,6 +2,7 @@
 export type PrayerRow = {
   id: string;
   message: string;
+  name: string | null;
   created_at: string;
 };
 
@@ -12,8 +13,8 @@ export type Database = {
     Tables: {
       prayer_requests: {
         Row: PrayerRow;
-        Insert: { message: string };
-        Update: { message?: string };
+        Insert: { message: string; name?: string | null };
+        Update: { message?: string; name?: string | null };
         Relationships: [];
       };
     };

@@ -36,7 +36,9 @@ You do **not** need to connect your GitHub repository to Supabase. This app conn
 
 5. Restart `npm run dev`. The demo banner disappears. Add a request and open the page in another browser to verify the shared wall. Click **Refresh** to fetch other visitors' new requests; this version does not use realtime subscriptions.
 
-The app reads `id`, `message`, `created_at` from `public.prayer_requests` and inserts only `message`. The database creates IDs and timestamps. The newest 200 prayers are shown; older requests remain stored. On failure, check the configuration, table, and policies. Failed submissions keep the entered text.
+For an existing database, run `supabase/migrations/20261013_add_prayer_name.sql` in the Supabase SQL Editor before using this version. It adds the optional name field and permits visitors to submit it. New installations use the updated `supabase/schema.sql` instead.
+
+The app reads `id`, `message`, `name`, `created_at` from `public.prayer_requests` and inserts `message` and `name`. Staying anonymous always sends a null name, even if a name was entered before switching back. Existing prayers remain anonymous. Names are limited to 60 characters and are displayed in prayer cards and the list. The database creates IDs and timestamps. The newest 200 prayers are shown; older requests remain stored. On failure, check the configuration, table, and policies. Failed submissions keep the entered text and name.
 
 ## Deploy to GitHub Pages
 
