@@ -17,6 +17,8 @@ Without Supabase settings, you get a labeled demo with three example prayers. De
 
 ## Connect Supabase
 
+You do **not** need to connect your GitHub repository to Supabase. This app connects directly using the project URL and publishable key. Supabase's optional GitHub integration is for database deployment/branching workflows, not for hosting this React website.
+
 1. Send your colleague `supabase/schema.sql`. They should run it once in the project's **SQL Editor**. It creates the table and public read/insert policies. If they already made a table, agree on this schema first.
 2. Ask for the **project URL** and **publishable key** from the project's Connect dialog / API settings. A legacy `anon` key also works. Never use a secret or `service_role` key in this website.
 3. Copy the example configuration:
