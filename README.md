@@ -42,6 +42,39 @@ The app reads `id`, `message`, `name`, `created_at` from `public.prayer_requests
 
 Run `supabase/add-name.sql` in Supabase SQL Editor **before deploying this app update**. This adds the nullable name column and permission to submit it. Existing prayers stay anonymous. Do not rerun the full `schema.sql` on an existing database. Then push the app changes and let Netlify redeploy; no new environment variables are needed.
 
+## Events
+
+For an existing database, run `supabase/add-events.sql` in the Supabase SQL Editor before deploying this version (apply `add-name.sql` first if names have not been added). New databases use `schema.sql`. No database migration has been applied automatically.
+
+In the Supabase Table Editor, add a row to `fellowship_events` with your gathering's title, date, and `is_current` set to true. Only one event can be current. At your next gathering, set the previous event's `is_current` to false, then create the new current event. Visitors can read events but cannot create or change them.
+
+The wall defaults to **This event**. Past events are available in the Gathering filter, and existing unassigned requests are under **Earlier prayers (no event)**. The add-prayer popup always uses the current event, even when browsing an older one. If no event is current, posting is disabled. Each event loads its newest 200 requests separately. The demo uses example events and browser-only storage.
+
+Search checks names and request text, ignoring case. All search words must match. Filters offer named/anonymous requests, the last 7 or 30 days, and newest/oldest sorting. They apply to the selected gathering's newest 200 loaded prayers. Clear filters resets these controls while keeping the selected gathering. No additional database migration is needed for search or filters.
+
+## Event name on prayer requests
+
+Before deploying this version, run `supabase/add-event-name.sql` after the events migration. This is safe if you already added the `event_name` text column manually. The app submits the current event's ID and title with each prayer; a database trigger derives the stored title from the linked event so stale or incorrect client names cannot be stored. Existing linked prayers are backfilled, while unassigned prayers are left untouched.
+
+`event_id` remains the relationship used for filtering. `event_name` records the title when the prayer is submitted; later event renames do not rewrite this historical title automatically. New installations run `add-event-name.sql` after `schema.sql` as well.
+
+## Organiser event manager
+
+1. Run `supabase/add-event-admins.sql` in the SQL Editor after the events migration. New databases also run this after `schema.sql`.
+2. In Supabase **Authentication → Users**, create an email/password account for each organiser (or use their existing account). Ensure the account can sign in and its email is confirmed. No public signup is provided in the app.
+3. Copy the account's user UUID and run this in the SQL Editor, replacing the placeholder:
+
+   ```sql
+   insert into public.event_admins (user_id)
+   values ('YOUR_AUTH_USER_UUID') on conflict do nothing;
+   ```
+
+4. Deploy the updated app, click **Organiser sign-in**, and use that account. Approved organisers see **Manage events**, where they can create and edit gatherings and choose the current event. Switching events preserves all prayer requests.
+
+Only the dashboard/SQL Editor can add or remove admin membership. Remove access by deleting the organiser's `event_admins` row. Signing in alone does not grant admin access. All event writes go through an RPC that verifies membership on every call; anonymous users cannot call it, and signed-in non-admins are rejected. No service-role key or admin password is embedded in the website.
+
+`supabase/test-event-admins.sql` checks permissions, rejection, event switching, and revocation in a transaction that rolls back its fixtures. Run it in SQL Editor after applying the migration; it has not been run against your hosted database automatically.
+
 ## Deploy to GitHub Pages
 
 1. Commit and push the files, including `package-lock.json`, to `main` or `master`. `.env.local` is ignored by Git.
