@@ -1,6 +1,6 @@
 # MCAC Prayer Wall
 
-A simple React + TypeScript + Vite website with anonymous prayer requests and pastel cards, ready for Supabase and GitHub Pages.
+A simple React + TypeScript + Vite website with prayer requests, optional names, and pastel cards, ready for Supabase and GitHub Pages.
 
 ## Run locally
 
@@ -36,7 +36,11 @@ You do **not** need to connect your GitHub repository to Supabase. This app conn
 
 5. Restart `npm run dev`. The demo banner disappears. Add a request and open the page in another browser to verify the shared wall. Click **Refresh** to fetch other visitors' new requests; this version does not use realtime subscriptions.
 
-The app reads `id`, `message`, `created_at` from `public.prayer_requests` and inserts only `message`. The database creates IDs and timestamps. The newest 200 prayers are shown; older requests remain stored. On failure, check the configuration, table, and policies. Failed submissions keep the entered text.
+The app reads `id`, `message`, `name`, `created_at` from `public.prayer_requests` and inserts `message` and an optional `name` (up to 80 characters). Blank names are saved as NULL and shown as Anonymous. The database creates IDs and timestamps. The newest 200 prayers are shown; older requests remain stored. On failure, check the configuration, table, and policies. Failed submissions keep the entered text and name.
+
+### Existing database: add optional names
+
+Run `supabase/add-name.sql` in Supabase SQL Editor **before deploying this app update**. This adds the nullable name column and permission to submit it. Existing prayers stay anonymous. Do not rerun the full `schema.sql` on an existing database. Then push the app changes and let Netlify redeploy; no new environment variables are needed.
 
 ## Deploy to GitHub Pages
 

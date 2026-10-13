@@ -10,6 +10,7 @@ function isPrayerRequest(value: unknown): value is PrayerRequest {
     && 'id' in value && typeof value.id === 'string'
     && 'message' in value && typeof value.message === 'string'
     && 'created_at' in value && typeof value.created_at === 'string'
+    && (!('name' in value) || value.name === null || typeof value.name === 'string')
     && (!('example' in value) || typeof value.example === 'boolean');
 }
 
@@ -24,6 +25,7 @@ function readDemo(): PrayerRequest[] {
 function App() {
   const [requests, setRequests] = useState<PrayerRequest[]>(() => demoMode ? readDemo() : []);
   const [message, setMessage] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(!demoMode && !configurationError);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(configurationError);
@@ -35,7 +37,7 @@ function App() {
     setLoading(true);
     setError('');
     try {
-      const { data, error: queryError } = await supabase.from('prayer_requests').select('id,message,created_at').order('created_at', { ascending: false }).limit(200);
+      const { data, error: queryError } = await supabase.from('prayer_requests').select('id,message,name,created_at').order('created_at', { ascending: false }).limit(200);
       if (queryError) throw queryError;
       setRequests(data);
     } catch {
@@ -47,6 +49,7 @@ function App() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = message.trim();
+    const displayName = name.trim() || null;
     if (!text || busy.current || configurationError || loading) return;
     busy.current = true;
     setSaving(true);
@@ -55,16 +58,17 @@ function App() {
     try {
       let request: PrayerRequest;
       if (demoMode) {
-        request = { id: crypto.randomUUID(), message: text, created_at: new Date().toISOString() };
+        request = { id: crypto.randomUUID(), message: text, name: displayName, created_at: new Date().toISOString() };
         localStorage.setItem(storageKey, JSON.stringify([request, ...requests]));
       } else {
         if (!supabase) throw new Error('Supabase is not configured');
-        const { data, error: insertError } = await supabase.from('prayer_requests').insert({ message: text }).select('id,message,created_at').single();
+        const { data, error: insertError } = await supabase.from('prayer_requests').insert({ message: text, name: displayName }).select('id,message,name,created_at').single();
         if (insertError) throw insertError;
         request = data;
       }
       setRequests(current => [request, ...current.filter(item => item.id !== request.id)]);
       setMessage('');
+      setName('');
       setNotice(demoMode ? 'Saved in this browser.' : 'Prayer added.');
     } catch {
       setError(demoMode ? 'Your browser couldn’t save this demo request. Please allow local storage and try again.' : 'We couldn’t save your request. Your text is still here; please try again.');
@@ -80,9 +84,22 @@ function App() {
           {error && <div className="error" role="alert">{error}</div>}
           {loading && <p role="status">Loading requests…</p>}
           {!loading && !error && requests.length === 0 && <p className="empty">No prayer requests yet.</p>}
-          <div className="cards">{requests.map((request, index) => <article className={`card tone-${index % 4}`} key={request.id}><p>{request.message}</p><footer><span>{request.example ? 'Example' : 'Anonymous'}</span><time dateTime={request.created_at}>{new Date(request.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time></footer></article>)}</div>
+          <div className="cards">{requests.map((request, index) => <article className={`card tone-${index % 4}`} key={request.id}><p>{request.message}</p><footer><span>{request.example ? 'Example' : request.name?.trim() || 'Anonymous'}</span><time dateTime={request.created_at}>{new Date(request.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</time></footer></article>)}</div>
         </section>
-        <aside><form id="prayer-form" onSubmit={submit}><h2>Add a prayer</h2><label htmlFor="message">Your request</label><textarea id="message" value={message} onChange={event => setMessage(event.target.value)} placeholder="Please pray for…" maxLength={1000} required rows={5} disabled={saving} /><div className="field-footer"><span>Anonymous</span><span>{message.length}/1000</span></div><p className="privacy-note">Publicly visible. Please leave out personal details.</p><button className="submit" disabled={saving || loading || !message.trim() || !!configurationError}>{saving ? 'Adding…' : 'Add prayer'}</button><p className="success" role="status">{notice}</p></form></aside>
+        <aside>
+          <form id="prayer-form" onSubmit={submit}>
+            <h2>Add a prayer</h2>
+            <label htmlFor="name">Name (optional)</label>
+            <input id="name" name="name" autoComplete="name" value={name} onChange={event => setName(event.target.value)} maxLength={80} disabled={saving} aria-describedby="name-hint" />
+            <p id="name-hint" className="field-hint">Leave blank to stay anonymous.</p>
+            <label htmlFor="message">Your request</label>
+            <textarea id="message" value={message} onChange={event => setMessage(event.target.value)} placeholder="Please pray for…" maxLength={1000} required rows={5} disabled={saving} />
+            <div className="field-footer"><span>{message.length}/1000</span></div>
+            <p className="privacy-note">Your name and request will be public. Please leave out sensitive details.</p>
+            <button className="submit" disabled={saving || loading || !message.trim() || !!configurationError}>{saving ? 'Adding…' : 'Add prayer'}</button>
+            <p className="success" role="status">{notice}</p>
+          </form>
+        </aside>
       </div>
     </main>
   </>;

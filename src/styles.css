@@ -6,11 +6,11 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; }
-button, textarea { font: inherit; }
+button, textarea, input { font: inherit; }
 a { color: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: default; opacity: .6; }
-a:focus-visible, button:focus-visible, textarea:focus-visible {
+a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible {
   outline: 3px solid #8b6b42;
   outline-offset: 4px;
 }
@@ -40,8 +40,12 @@ h2 { font-size: 20px; margin-bottom: 20px; }
 .tone-3 { background: #eee7ef; }
 .card > p { margin: 0 0 24px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .card footer { margin-top: auto; display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: #626b5a; }
+.card footer span { min-width: 0; overflow-wrap: anywhere; }
+.card footer time { flex-shrink: 0; }
 form { padding: 22px; background: #fffefb; border: 1px solid #e4e4d9; border-radius: 10px; scroll-margin-top: 20px; }
 label { display: block; font-size: 13px; margin-bottom: 8px; }
+input { width: 100%; border: 1px solid #dedfd2; border-radius: 6px; padding: 10px 12px; font-size: 14px; color: inherit; background: #faf9f5; }
+.field-hint { font-size: 12px; color: #69715f; margin: 6px 0 18px; }
 textarea { resize: vertical; min-height: 140px; width: 100%; border: 1px solid #dedfd2; border-radius: 6px; padding: 12px; font-size: 14px; color: inherit; background: #faf9f5; }
 .field-footer { display: flex; justify-content: space-between; font-size: 12px; color: #69715f; }
 .privacy-note { font-size: 12px; color: #69715f; margin: 18px 0; }

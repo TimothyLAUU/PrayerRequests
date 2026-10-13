@@ -2,18 +2,20 @@
 export type PrayerRow = {
   id: string;
   message: string;
+  name: string | null;
   created_at: string;
 };
 
-export type PrayerRequest = PrayerRow & { example?: boolean };
+// Older browser-only demo entries may not have a name field.
+export type PrayerRequest = Omit<PrayerRow, 'name'> & { name?: string | null; example?: boolean };
 
 export type Database = {
   public: {
     Tables: {
       prayer_requests: {
         Row: PrayerRow;
-        Insert: { message: string };
-        Update: { message?: string };
+        Insert: { message: string; name?: string | null };
+        Update: { message?: string; name?: string | null };
         Relationships: [];
       };
     };
