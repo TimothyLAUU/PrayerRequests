@@ -1,6 +1,6 @@
 # MCAC Prayer Wall
 
-A simple React + Vite website with anonymous prayer requests and pastel cards, ready for Supabase and GitHub Pages.
+A simple React + TypeScript + Vite website with anonymous prayer requests and pastel cards, ready for Supabase and GitHub Pages.
 
 ## Run locally
 
@@ -50,6 +50,8 @@ Deploying without settings gives you the labeled demo. After adding/changing var
 GitHub Pages hosts the React files; Supabase stores the shared requests. Publishable browser keys are intentionally public; database policies control access. Visitors can read and submit, but cannot edit or delete prayers. Your colleague can remove requests from the Supabase Table Editor. This first version has no moderation queue or spam protection; add these before promoting a widely accessible public wall.
 
 ## Build
+
+`npm run typecheck` checks TypeScript without building. The production build also runs this check automatically.
 
 ```sh
 npm run build

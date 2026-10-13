@@ -1,19 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { configurationError, demoMode, supabase } from './supabase';
 import './styles.css';
+import type { PrayerRequest } from './types';
 
 const storageKey = 'mcac-prayer-wall-demo-v1';
-function readDemo() {
+function isPrayerRequest(value: unknown): value is PrayerRequest {
+  return typeof value === 'object' && value !== null
+    && 'id' in value && typeof value.id === 'string'
+    && 'message' in value && typeof value.message === 'string'
+    && 'created_at' in value && typeof value.created_at === 'string'
+    && (!('example' in value) || typeof value.example === 'boolean');
+}
+
+function readDemo(): PrayerRequest[] {
   try {
-    const saved = JSON.parse(localStorage.getItem(storageKey));
-    if (Array.isArray(saved) && saved.every(item => item && typeof item.id === 'string' && typeof item.message === 'string' && typeof item.created_at === 'string')) return saved;
+    const saved: unknown = JSON.parse(localStorage.getItem(storageKey) ?? 'null');
+    if (Array.isArray(saved) && saved.every(isPrayerRequest)) return saved;
   } catch { /* Use examples when browser storage is unavailable. */ }
   return ['I want to grow closer to God and make more room for Him in my everyday life.', 'Please pray for peace and wisdom as I step into a new season.', 'For our community to keep showing up for one another with kindness and love.'].map((message, index) => ({ id: `example-${index}`, message, created_at: new Date().toISOString(), example: true }));
 }
 
 function App() {
-  const [requests, setRequests] = useState(() => demoMode ? readDemo() : []);
+  const [requests, setRequests] = useState<PrayerRequest[]>(() => demoMode ? readDemo() : []);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(!demoMode && !configurationError);
   const [saving, setSaving] = useState(false);
@@ -35,7 +44,7 @@ function App() {
   }
   useEffect(() => { refresh(); }, []);
 
-  async function submit(event) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = message.trim();
     if (!text || busy.current || configurationError || loading) return;
@@ -44,11 +53,12 @@ function App() {
     setError('');
     setNotice('');
     try {
-      let request;
+      let request: PrayerRequest;
       if (demoMode) {
         request = { id: crypto.randomUUID(), message: text, created_at: new Date().toISOString() };
         localStorage.setItem(storageKey, JSON.stringify([request, ...requests]));
       } else {
+        if (!supabase) throw new Error('Supabase is not configured');
         const { data, error: insertError } = await supabase.from('prayer_requests').insert({ message: text }).select('id,message,created_at').single();
         if (insertError) throw insertError;
         request = data;
@@ -77,4 +87,6 @@ function App() {
     </main>
   </>;
 }
-createRoot(document.getElementById('root')).render(<App />);
+const root = document.getElementById('root');
+if (!root) throw new Error('Root element is missing');
+createRoot(root).render(<App />);
